@@ -1,0 +1,19 @@
+{
+  "name": "The Dock",
+  "description": "A GNOME-native animated dock with a distribution-aware Applications button. Built on Dash2Dock Animated by icedman (GPL-3.0).",
+  "uuid": "the-dock@hollali.local",
+  "settings-schema": "org.gnome.shell.extensions.the-dock",
+  "schema-id": "org.gnome.shell.extensions.the-dock",
+  "gettext-domain": "the-dock",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50",
+    "51"
+  ],
+  "version": 2,
+  "url": "https://github.com/hollali/the-dock"
+}

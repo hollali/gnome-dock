@@ -1,12 +1,12 @@
 # gnome-dock
 
-A GNOME Shell dock extension (based on Dash2Dock Animated by icedman, GPL‑3.0) that gives you a fully‑customisable dock with a distribution‑aware Applications button. The home icon toggles the overview exactly like the Super key.
+A GNOME Shell dock extension (based on Dash2Dock Animated by icedman, GPL‑3.0) that gives you a fully‑customisable dock with a distribution‑aware Applications button. The home icon opens the application grid.
 
 ## Features
 
 * Full Dash2Dock behaviour (animated dock icons, autohide/intellihide, scroll‑wheel to cycle windows, click to maximise/minimise windows)  
 * **Distribution‑aware Applications button** – shows the logo of your Linux distribution (auto‑detect, manual selection, or a custom SVG file).  
-* **Super‑like home icon** – a single click toggles the GNOME overview (same behaviour as pressing the Super key).  
+* **Applications home icon** – a single click opens the GNOME application grid; clicking it again returns to the window picker, like the stock GNOME Show Apps button.  
 * All 100+ Dash2Dock settings now live under `org.gnome.shell.extensions.the-dock` (General, Appearance, Style, Tweaks and the new **Distribution Icon** page).  
 * Default dock position is **bottom** (dock‑location = 0).  
 * GNOME Shell 45 – 51 compatible (tested headless on GNOME 51).  
@@ -32,7 +32,7 @@ dconf reset -f /org/gnome/shell/extensions/the-dock/
 
 * The dock appears at the **bottom** of the screen.  
 * The **Applications button** now shows your distribution’s logo (Fedora, Ubuntu, …) or a custom SVG you provide.  
-* Clicking the home icon (the Applications button) toggles the GNOME overview – exactly the same behaviour as pressing the **Super** key.  
+* Clicking the home icon (the Applications button) opens the application grid; clicking it again returns to the window picker, matching the stock GNOME Show Apps button.  
 * Open the extension’s preferences (`gnome-extensions prefs the-dock@hollali.local`) to tweak the Distribution Icon page, animation, autohide, colours, etc.
 
 ## Compatibility notes

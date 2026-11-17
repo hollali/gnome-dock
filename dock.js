@@ -752,7 +752,10 @@ export let Dock = GObject.registerClass(
             icon._connected = true;
             icon.connectObject(
               'button-press-event',
-              () => this._toggleHome(),
+              (actor, event) => {
+                if (event.get_button() !== 1) return Clutter.EVENT_PROPAGATE;
+                return this._toggleHome();
+              },
               'enter-event',
               () => {
                 this.dash._showAppsIcon.showLabel();
@@ -771,7 +774,10 @@ export let Dock = GObject.registerClass(
             button._theDockHomeConnected = true;
             button.connectObject(
               'button-press-event',
-              () => this._toggleHome(),
+              (actor, event) => {
+                if (event.get_button() !== 1) return Clutter.EVENT_PROPAGATE;
+                return this._toggleHome();
+              },
               this
             );
           }
@@ -855,12 +861,25 @@ export let Dock = GObject.registerClass(
     }
 
     _toggleHome() {
-      // Match the Super key: toggle the overview.
+      // Match the stock GNOME Show Apps button: toggle between the
+      // application grid and the window picker.
       try {
-        Main.overview.toggle();
+        const overview = Main.overview;
+        const showAppsButton = overview.dash?.showAppsButton;
+        if (!overview.visible) {
+          if (typeof overview.showApps === 'function') {
+            overview.showApps();
+          } else {
+            overview.show();
+          }
+        } else if (showAppsButton) {
+          showAppsButton.checked = !showAppsButton.checked;
+        } else {
+          overview.showApps();
+        }
       } catch (err) {
         try {
-          Main.overview.show();
+          Main.overview.showApps();
         } catch (err2) {}
       }
       return Clutter.EVENT_STOP;

@@ -143,9 +143,7 @@ export class DockController {
         box.add_child(spacer);
 
         btn.connect('clicked', () => {
-            try { Main.overview.showApps(); } catch (e) {
-                try { Main.overview.show(); } catch (e2) {}
-            }
+            try { Main.overview.showApps(); } catch (e) {}
         });
         btn.connect('button-press-event', (a, e) => {
             if (e.get_button() !== 3) return Clutter.EVENT_PROPAGATE;

@@ -17,6 +17,7 @@
 * Use absolute home paths for config, downloads, documents and recent files
 * Fix middle-click new-window behavior and clock style 7
 * Replace eval-based self-test messaging and clean up debug logging
+* Add shared CI validation, packaging and tag-based releases for GitHub and GitLab
 
 # Release 84
 

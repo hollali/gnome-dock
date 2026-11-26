@@ -1,0 +1,45 @@
+stages:
+  - validate
+  - package
+  - release
+
+default:
+  image: node:20-bookworm
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq libglib2.0-bin python3 zip >/dev/null
+
+validate:
+  stage: validate
+  script:
+    - python3 scripts/ci_validate.py
+
+package:
+  stage: package
+  script:
+    - ./scripts/ci_package.sh
+    - echo "PACKAGE_JOB_ID=$CI_JOB_ID" >> package.env
+    - echo "EXTENSION_ZIP=$(basename dist/*.zip)" >> package.env
+  artifacts:
+    paths:
+      - dist/*.zip
+    reports:
+      dotenv: package.env
+    expire_in: 1 week
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  before_script: []
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v/'
+  needs:
+    - job: package
+      artifacts: true
+  script:
+    - |
+      release-cli create \
+        --name "The Dock $CI_COMMIT_TAG" \
+        --tag-name "$CI_COMMIT_TAG" \
+        --description "Automated release of The Dock $CI_COMMIT_TAG" \
+        --assets-link "{\"name\":\"Extension ZIP\",\"url\":\"${CI_PROJECT_URL}/-/jobs/${PACKAGE_JOB_ID}/artifacts/raw/dist/${EXTENSION_ZIP}\"}"

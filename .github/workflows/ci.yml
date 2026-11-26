@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install GLib tools
+        run: sudo apt-get update && sudo apt-get install -y libglib2.0-bin
+      - name: Validate sources
+        run: python3 scripts/ci_validate.py
+
+  package:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install packaging tools
+        run: sudo apt-get update && sudo apt-get install -y zip
+      - name: Build extension archive
+        run: ./scripts/ci_package.sh
+      - name: Upload extension archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-dock-extension
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Download extension archive
+        uses: actions/download-artifact@v4
+        with:
+          name: the-dock-extension
+          path: dist
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --title "The Dock $GITHUB_REF_NAME" --generate-notes

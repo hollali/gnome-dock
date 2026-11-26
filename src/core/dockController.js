@@ -97,9 +97,9 @@ export class DockController {
         this.settings.connect('group-windows', () => this._refreshApps());
         this.settings.connect('window-per-item', () => this._refreshApps());
         this.settings.connect('drag-drop-reorder', () => this._refreshApps());
-        this.settings.connect('distro-mode', () => this._updateAppsButtonIcon());
-        this.settings.connect('distro-manual-id', () => this._updateAppsButtonIcon());
-        this.settings.connect('distro-custom-path', () => this._updateAppsButtonIcon());
+        try { this.settings.connect('distro-mode', () => this._updateAppsButtonIcon()); } catch (e) { console.log(e); }
+        try { this.settings.connect('distro-manual-id', () => this._updateAppsButtonIcon()); } catch (e) { console.log(e); }
+        try { this.settings.connect('distro-custom-path', () => this._updateAppsButtonIcon()); } catch (e) { console.log(e); }
 
         // monitor changes
         this._connect(Main.layoutManager, 'monitors-changed', () => this._onMonitorsChanged());

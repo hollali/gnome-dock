@@ -18,13 +18,23 @@ export class DistributionIconResolver {
     }
 
     _getString(key) {
-        if (this._settings && typeof this._settings.getString === 'function')
-            return this._settings.getString(key);
-        return this._settings.get_string(key);
+        try {
+            if (this._settings && typeof this._settings.getString === 'function')
+                return this._settings.getString(key);
+            return this._settings.get_string(key);
+        } catch (e) {
+            if (key === 'distro-mode') return 'auto';
+            return '';
+        }
     }
 
     resolve() {
-        const mode = this._getString('distro-mode');
+        let mode;
+        try {
+            mode = this._getString('distro-mode');
+        } catch (e) {
+            mode = 'auto';
+        }
         // 1. custom
         if (mode === 'custom' || mode === 'auto') {
             if (mode === 'custom') {

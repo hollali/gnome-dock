@@ -162,6 +162,18 @@
         </child>
         <child>
           <object class="AdwActionRow">
+            <property name="title" translatable="yes">Hide When Apps Are Open</property>
+            <property name="subtitle" translatable="yes">Hide the dock whenever an application window is open on the current workspace, even if it does not overlap the dock.</property>
+            <property name="activatable-widget">autohide-on-app-open</property>
+            <child>
+              <object class="GtkSwitch" id="autohide-on-app-open">
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
             <property name="title" translatable="yes">Pressure Sense</property>
             <property name="subtitle" translatable="yes">Move pointer down to force dash visiblity.</property>
             <property name="activatable-widget">pressure-sense</property>

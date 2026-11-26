@@ -223,7 +223,7 @@ export let Animator = class {
       icon._prev = prevIcon;
       icon._next = null;
       if (prevIcon) {
-        icon._next = icon;
+        prevIcon._next = icon;
       }
       prevIcon = icon;
     });

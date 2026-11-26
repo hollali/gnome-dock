@@ -10,7 +10,13 @@
 
 # Next Release
 
-* Bug fixes
+* Add "Hide When Apps Are Open" autohide option
+* Fix autohide pointer detection and window filtering
+* Fix preferred monitor selection, icon-size handling and animation links
+* Fix pressure sensitivity slider, theme loading and settings defaults
+* Use absolute home paths for config, downloads, documents and recent files
+* Fix middle-click new-window behavior and clock style 7
+* Replace eval-based self-test messaging and clean up debug logging
 
 # Release 84
 

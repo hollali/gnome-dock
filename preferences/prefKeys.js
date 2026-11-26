@@ -222,7 +222,7 @@ export let PrefKeys = class {
   }
 
   disconnectSettings() {
-    this._settingsListeners.forEach((id) => {
+    (this._settingsListeners || []).forEach((id) => {
       this._settings.disconnect(id);
     });
     this._settingsListeners = [];

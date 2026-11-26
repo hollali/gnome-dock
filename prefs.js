@@ -7,7 +7,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Adw from 'gi://Adw';
 
-const GETTEXT_DOMAIN = 'dash2dock-light';
+const GETTEXT_DOMAIN = 'the-dock';
 
 import { schemaId, SettingsKeys } from './preferences/keys.js';
 import { MonitorsConfig } from './monitors.js';
@@ -75,11 +75,11 @@ export default class Preferences extends ExtensionPreferences {
     const actions = [
       {
         name: 'open-bug-report',
-        link: 'https://github.com/icedman/dash2dock-lite/issues',
+        link: 'https://github.com/hollali/gnome-dock/issues',
       },
       {
         name: 'open-readme',
-        link: 'https://github.com/icedman/dash2dock-lite',
+        link: 'https://github.com/hollali/gnome-dock',
       },
       {
         name: 'open-buy-coffee',
@@ -87,7 +87,7 @@ export default class Preferences extends ExtensionPreferences {
       },
       {
         name: 'open-license',
-        link: 'https://github.com/icedman/dash2dock-lite/blob/master/LICENSE',
+        link: 'https://github.com/hollali/gnome-dock/blob/master/LICENSE',
       },
     ];
 
@@ -105,8 +105,7 @@ export default class Preferences extends ExtensionPreferences {
   updateFolders(window, builder, settings) {
     let row = builder.get_object('downloads-folder-row');
     let val = settings.get_string('downloads-path') || '';
-    console.log(`=======${val}`);
-    row.title = `${val}`;
+    row.title = val || 'Choose Downloads Folder';
   }
 
   async selectFolder(window, builder, settings, target) {
@@ -115,11 +114,8 @@ export default class Preferences extends ExtensionPreferences {
       let folder = dialog.select_folder_finish(task);
       if (folder instanceof Gio.File) {
         let path = folder.get_path();
-        console.log(`${target} = ${path}`);
         settings.set_string(target, path);
         this.updateFolders(window, builder, settings);
-      } else {
-        console.log('No valid folder selected.');
       }
     });
     return null;
@@ -194,14 +190,7 @@ export default class Preferences extends ExtensionPreferences {
 
     if (builder.get_object('downloads-folder')) {
       builder.get_object('downloads-folder').connect('clicked', () => {
-        settings.set_string('downloads-path', '');
-        this.selectFolder(window, builder, settings, 'downloads-path')
-          .then((path) => {
-            console.log(path);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+        this.selectFolder(window, builder, settings, 'downloads-path');
       });
       this.updateFolders(window, builder, settings);
     }
@@ -216,7 +205,7 @@ export default class Preferences extends ExtensionPreferences {
 
     if (builder.get_object('self-test')) {
       builder.get_object('self-test').connect('clicked', () => {
-        settings.set_string('msg-to-ext', 'this.runDiagnostics()');
+        settings.set_string('msg-to-ext', 'diagnostics');
       });
     }
   }
@@ -250,15 +239,23 @@ export default class Preferences extends ExtensionPreferences {
     let settings = this.getSettings(schemaId);
     settings.set_string('msg-to-ext', '');
 
-    let settingsKeys = SettingsKeys({
-      _toRGBA: function (rgba) {
-        return new Gdk.RGBA(rgba);
-      }
-    });
+    const rgbaPatch = {
+      _toRGBA(rgba) {
+        const color = new Gdk.RGBA();
+        color.red = rgba.red;
+        color.green = rgba.green;
+        color.blue = rgba.blue;
+        color.alpha = rgba.alpha;
+        return color;
+      },
+    };
+    let settingsKeys = SettingsKeys(rgbaPatch);
     settingsKeys.connectBuilder(builder);
     settingsKeys.connectSettings(settings);
 
     this._settings = settings;
+    this._settingsKeys = settingsKeys;
+    this._rgbaPatch = rgbaPatch;
 
     this._addDistributionPage(window, settings);
 
@@ -270,7 +267,7 @@ export default class Preferences extends ExtensionPreferences {
     }
 
     let toggle_experimental = () => {
-      let exp = false; // settingsKeys.getValue('experimental-features');
+      let exp = settingsKeys.getValue('experimental-features');
       // builder.get_object('dock-location-row').visible = exp;
       // if (builder.get_object('lamp-app-animation-row')) {
       //   builder.get_object('lamp-app-animation-row').visible = exp;
@@ -293,7 +290,7 @@ export default class Preferences extends ExtensionPreferences {
     this._themed_presets = [];
     this.preloadPresets(`${this.path}/themes`);
     this.preloadPresets(
-      Gio.File.new_for_path('.config/d2da/themes').get_path()
+      GLib.build_filenamev([GLib.get_home_dir(), '.config/d2da/themes'])
     );
     this._buildThemesMenu(window);
     this.updateMonitors();
@@ -355,10 +352,12 @@ export default class Preferences extends ExtensionPreferences {
   }
 
   loadPreset(i) {
-    let settingsKeys = SettingsKeys();
-    settingsKeys.connectSettings(this._settings);
+    let settingsKeys = this._settingsKeys ?? SettingsKeys(this._rgbaPatch);
+    settingsKeys.disconnectSettings();
     if (i == this._themed_presets.length - 1) {
       // export
+      settingsKeys._builder = this._builder;
+      settingsKeys.connectSettings(this._settings);
       let keys = settingsKeys.keys();
       let json = {};
       Object.keys(keys).forEach((n) => {

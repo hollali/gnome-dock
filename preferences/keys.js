@@ -28,7 +28,7 @@ export const SettingsKeys = (patch) => {
       widget_type: 'switch',
     },
     'shrink-icons': {
-      default_value: false,
+      default_value: true,
       widget_type: 'switch',
     },
     'icon-size': {
@@ -60,7 +60,7 @@ export const SettingsKeys = (patch) => {
       // test: { values: [0, 1] },
     },
     'autohide-dash': {
-      default_value: true,
+      default_value: false,
       widget_type: 'switch',
       key_maps: {},
       test: { pointer: 'slide-through' },
@@ -71,8 +71,14 @@ export const SettingsKeys = (patch) => {
       key_maps: {},
       test: { pointer: 'slide-through' },
     },
-    'pressure-sense': {
+    'autohide-on-app-open': {
       default_value: true,
+      widget_type: 'switch',
+      key_maps: {},
+      test: { pointer: 'slide-through' },
+    },
+    'pressure-sense': {
+      default_value: false,
       widget_type: 'switch',
       key_maps: {},
       test: { pointer: 'slide-down' },
@@ -83,7 +89,7 @@ export const SettingsKeys = (patch) => {
       test: { pointer: 'slide-through', values: [0, 0.5, 1] },
     },
     'background-color': {
-      default_value: [0, 0, 0, 0.5],
+      default_value: [0, 0, 0, 0.25],
       widget_type: 'color',
       themed: true,
     },
@@ -105,12 +111,12 @@ export const SettingsKeys = (patch) => {
       themed: true,
     },
     'topbar-background-color': {
-      default_value: [0, 0, 0, 0.5],
+      default_value: [0, 0, 0, 0.25],
       widget_type: 'color',
       themed: true,
     },
     'topbar-foreground-color': {
-      default_value: [0, 0, 0, 0],
+      default_value: [1, 1, 1, 1],
       widget_type: 'color',
       themed: true,
     },
@@ -147,12 +153,12 @@ export const SettingsKeys = (patch) => {
       themed: true,
     },
     'label-background-color': {
-      default_value: [0, 0, 0, 0.5],
+      default_value: [0, 0, 0, 0.25],
       widget_type: 'color',
       themed: true,
     },
     'label-foreground-color': {
-      default_value: [0, 0, 0, 0],
+      default_value: [1, 1, 1, 1],
       widget_type: 'color',
       themed: true,
     },
@@ -227,7 +233,7 @@ export const SettingsKeys = (patch) => {
       test: { pointer: 'slide-through', values: [0, 1, 2] },
     },
     'animation-bounce-height': {
-      default_value: 0,
+      default_value: 0.75,
       widget_type: 'scale',
       test: { pointer: 'slide-through', values: [0, 0.5, 1] },
     },
@@ -237,22 +243,22 @@ export const SettingsKeys = (patch) => {
       test: { values: [0, 1, 2, 3] },
     },
     'items-pullout-angle': {
-      default_value: 0,
+      default_value: 0.5,
       widget_type: 'scale',
       test: { pointer: 'slide-through', values: [0, 0.5, 1] },
     },
     'animation-magnify': {
-      default_value: 0,
+      default_value: 0.3,
       widget_type: 'scale',
       test: { pointer: 'slide-through', values: [0, 0.5, 1] },
     },
     'animation-spread': {
-      default_value: 0,
+      default_value: 0.75,
       widget_type: 'scale',
       test: { pointer: 'slide-through', values: [0, 0.5, 1] },
     },
     'animation-rise': {
-      default_value: 0,
+      default_value: 0.25,
       widget_type: 'scale',
       test: { pointer: 'slide-through', values: [0, 0.5, 1] },
     },
@@ -272,7 +278,7 @@ export const SettingsKeys = (patch) => {
       test: { values: [-1, 0, 1] },
     },
     'border-radius': {
-      default_value: 0,
+      default_value: 3,
       widget_type: 'scale',
       themed: true,
     },
@@ -299,7 +305,7 @@ export const SettingsKeys = (patch) => {
       themed: true,
     },
     'icon-border-radius': {
-      default_value: 0,
+      default_value: 3,
       widget_type: 'scale',
       themed: true,
     },

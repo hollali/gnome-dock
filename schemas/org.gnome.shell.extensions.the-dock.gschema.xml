@@ -56,6 +56,11 @@
         <summary>Autohide dodge mode</summary>
         <description>Autohide dash only when overlapping with windows.</description>
     </key>
+    <key type="b" name="autohide-on-app-open">
+        <default>true</default>
+        <summary>Hide when apps are open</summary>
+        <description>Hide the dash whenever an application window is open on the current workspace, even if it does not overlap the dash.</description>
+    </key>
     <key type="b" name="pressure-sense">
         <default>false</default>
         <summary>Pressure sense</summary>

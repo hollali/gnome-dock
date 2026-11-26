@@ -147,7 +147,9 @@ export const Services = class {
       this._downloadsDir = Gio.File.new_for_path(this._downloadsUserDir);
     } else {
       // fallback
-      this._downloadsDir = Gio.File.new_for_path('Downloads');
+      this._downloadsDir = Gio.File.new_for_path(
+        GLib.build_filenamev([GLib.get_home_dir(), 'Downloads'])
+      );
     }
 
     this._downloadsMonitor = this._downloadsDir.monitor(
@@ -219,8 +221,10 @@ export const Services = class {
 
     let trash_action = `${extension_path}/apps/empty-trash.sh`;
     {
-      let fn = Gio.File.new_for_path('.local/share/Trash');
-      trash_action = `rm -rf "${fn.get_path()}"`;
+      let trashDir = Gio.File.new_for_path(
+        GLib.build_filenamev([GLib.get_home_dir(), '.local/share/Trash'])
+      );
+      trash_action = `rm -rf "${trashDir.get_path()}"`;
     }
 
     let content = `[Desktop Entry]\nVersion=1.0\nTerminal=false\nType=Application\nName=Trash\nExec=${open_app} trash:///\nIcon=user-trash\nStartupWMClass=trash-dash2dock-lite\nActions=trash\n\n[Desktop Action trash]\nName=Empty Trash\nExec=${trash_action}\nTerminal=true\n`;
@@ -255,17 +259,19 @@ export const Services = class {
 
   setupFolderIcons() {
     this.setupTrashIcon();
+    const homeDir = GLib.get_home_dir();
     this.setupFolderIcon(
       'downloads',
       'Downloads',
       'folder-downloads',
-      'Downloads'
+      GLib.build_filenamev([homeDir, 'Downloads'])
     );
     this.setupFolderIcon(
       'documents',
       'Documents',
       'folder-documents',
-      'Documents'
+      this.extension.documents_path ||
+        GLib.build_filenamev([homeDir, 'Documents'])
     );
   }
 
@@ -527,7 +533,6 @@ export const Services = class {
   */
 
   async checkRecentFilesFromRecentManager() {
-    console.log('checking recent manager');
     let maxs = [5, 8, 10, 12, 15, 20, 25];
     let max_recent_items = maxs[this.extension.max_recent_items || 0];
 
@@ -542,8 +547,7 @@ export const Services = class {
       console.log(err);
     }
 
-    // const recentsPath = tempPath('recents.txt');
-    const recentsPath = '/tmp/recents.txt';
+    const recentsPath = tempPath('recents.txt');
 
     let fn = Gio.File.new_for_path(recentsPath);
     if (fn.query_exists(null)) {

@@ -13,21 +13,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * SPDX-License-Identifier: GPL-_queryDisplay2.0-or-later
+ * SPDX-License-Identifier: GPL-2.0-or-later
  *
  */
 
-('use strict');
+'use strict';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Fav from 'resource:///org/gnome/shell/ui/appFavorites.js';
 
+import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import Shell from 'gi://Shell';
-import Graphene from 'gi://Graphene';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import { tempPath, trySpawnCommandLine } from './utils.js';
 import { loadFile } from './utils.js';
 
 import { Timer } from './timer.js';
@@ -37,10 +36,7 @@ import { Services } from './services.js';
 import { Integrations } from './integrations.js';
 import { runTests } from './diagnostics.js';
 
-import {
-  Extension,
-  gettext as _,
-} from 'resource:///org/gnome/shell/extensions/extension.js';
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import { schemaId, SettingsKeys } from './preferences/keys.js';
 import { DistributionDetector } from './src/distribution/distributionDetector.js';
@@ -78,7 +74,7 @@ export default class Dash2DockLiteExt extends Extension {
         let d_monitor = dc['monitor'] ?? {};
         for (let i = 0; i < Main.layoutManager.monitors.length; i++) {
           let m = Main.layoutManager.monitors[i];
-          if (m.x == dc_monitor['x'] && m.y == dc_monitor['y']) {
+          if (m.x == d_monitor['x'] && m.y == d_monitor['y']) {
             index = m.index;
             break;
           }
@@ -340,11 +336,12 @@ export default class Dash2DockLiteExt extends Extension {
       return currentMonitorIndex;
     }
 
+    // Preference list: 0 = primary, n+1 = monitor n
     let idx = this.preferred_monitor || 0;
     if (idx == 0) {
       idx = Main.layoutManager.primaryIndex;
-    } else if (idx == Main.layoutManager.primaryIndex) {
-      idx = 0;
+    } else {
+      idx -= 1;
     }
 
     if (!Main.layoutManager.monitors[idx]) {
@@ -354,9 +351,13 @@ export default class Dash2DockLiteExt extends Extension {
     return idx;
   }
 
+  _configPath(...parts) {
+    return GLib.build_filenamev([GLib.get_home_dir(), '.config/d2da', ...parts]);
+  }
+
   async _loadConfig() {
     this._config = {};
-    let fn_config = Gio.File.new_for_path('.config/d2da/config.json');
+    let fn_config = Gio.File.new_for_path(this._configPath('config.json'));
     if (fn_config.query_exists(null)) {
       try {
         const contents = await loadFile(fn_config);
@@ -389,7 +390,7 @@ export default class Dash2DockLiteExt extends Extension {
       }
     }
 
-    let fn_icons = Gio.File.new_for_path('.config/d2da/icons.json');
+    let fn_icons = Gio.File.new_for_path(this._configPath('icons.json'));
     if (fn_icons.query_exists(null)) {
       try {
         const contents = await loadFile(fn_icons);
@@ -400,7 +401,7 @@ export default class Dash2DockLiteExt extends Extension {
           Object.keys(this.icon_map).forEach((k) => {
             let path = this.icon_map[k];
             if (path.toLowerCase().endsWith('.svg')) {
-              let file = Gio.File.new_for_path(`.config/d2da/${path}`);
+              let file = Gio.File.new_for_path(this._configPath(path));
               if (file.query_exists(null)) {
                 console.log(`loading icon ${file.get_path()}`);
                 this.icon_map_cache[k] = new Gio.FileIcon({ file: file });
@@ -414,7 +415,7 @@ export default class Dash2DockLiteExt extends Extension {
           Object.keys(this.app_map).forEach((k) => {
             let path = this.app_map[k];
             if (path.toLowerCase().endsWith('.svg')) {
-              let file = Gio.File.new_for_path(`.config/d2da/${path}`);
+              let file = Gio.File.new_for_path(this._configPath(path));
               if (file.query_exists(null)) {
                 console.log(`loading icon ${file.get_path()}`);
                 this.app_map_cache[k] = new Gio.FileIcon({ file: file });
@@ -427,7 +428,7 @@ export default class Dash2DockLiteExt extends Extension {
       }
     }
 
-    let fn_style = Gio.File.new_for_path('.config/d2da/style.css');
+    let fn_style = Gio.File.new_for_path(this._configPath('style.css'));
     if (fn_style.query_exists(null)) {
       let ctx = St.ThemeContext.get_for_stage(global.stage);
       let theme = ctx.get_theme();
@@ -440,7 +441,7 @@ export default class Dash2DockLiteExt extends Extension {
     this.icon_map_cache = {};
     this.app_map_cache = {};
 
-    let fn_style = Gio.File.new_for_path('.config/d2da/style.css');
+    let fn_style = Gio.File.new_for_path(this._configPath('style.css'));
     if (fn_style.query_exists(null)) {
       let ctx = St.ThemeContext.get_for_stage(global.stage);
       let theme = ctx.get_theme();
@@ -476,11 +477,13 @@ export default class Dash2DockLiteExt extends Extension {
 
       switch (name) {
         case 'msg-to-ext': {
-          if (value.length) {
-            try {
-              eval(value);
-            } catch (err) {
-              console.log(err);
+          if (value) {
+            switch (value) {
+              case 'diagnostics':
+                this.runDiagnostics();
+                break;
+              default:
+                console.log(`Unknown preferences message: ${value}`);
             }
             this._settings.set_string('msg-to-ext', '');
           }
@@ -554,6 +557,9 @@ export default class Dash2DockLiteExt extends Extension {
         case 'downloads-path':
           this.services.setupDownloads();
           break;
+        case 'documents-path':
+          this.services.setupFolderIcons();
+          break;
         // problematic settings needing animator restart
         case 'dock-location':
           this.recreateAllDocks();
@@ -588,14 +594,20 @@ export default class Dash2DockLiteExt extends Extension {
           this._updateMultiMonitorPreference();
           break;
         case 'icon-size':
+          this._updateShrink();
+        // fall through
         case 'preferred-monitor': {
           this._updateLayout();
           this.animate({ refresh: true });
           break;
         }
         case 'autohide-dodge':
-        case 'autohide-dash': {
+        case 'autohide-dash':
+        case 'autohide-on-app-open': {
           this._updateAutohide();
+          this._autohiders().forEach((autohider) => {
+            autohider._debounceCheckHide();
+          });
           break;
         }
         case 'dock-padding':
@@ -603,8 +615,7 @@ export default class Dash2DockLiteExt extends Extension {
           this.animate();
           break;
         }
-        case 'shrink-icons':
-        case 'icon-size': {
+        case 'shrink-icons': {
           this._updateShrink();
           this.animate();
           break;
@@ -933,7 +944,16 @@ export default class Dash2DockLiteExt extends Extension {
     this.animate();
   }
 
-  _updateBlurredBackground() {}
+  _updateBlurredBackground() {
+    if (!this.integrations || !this.docks) {
+      return;
+    }
+    this.docks.forEach((dock) => {
+      if (dock.animator) {
+        this.integrations.bms_update_size(dock.animator);
+      }
+    });
+  }
 
   _getPreferredColorScheme() {
     let scheme = 'light';

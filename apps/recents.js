@@ -2,12 +2,13 @@
 
 import Gtk from 'gi://Gtk?version=4.0';
 import Gio from 'gi://Gio';
+import { tempPath } from '../utils.js';
 
 let limit = 40;
 const recents = Gtk.RecentManager.get_default();
 let items = recents.get_items();
 
-let fn = Gio.File.new_for_path('/tmp/recents.txt');
+let fn = Gio.File.new_for_path(tempPath('recents.txt'));
 let content = '';
 for (let i = 0; i < limit && i < items.length; i++) {
   let item = items[i];

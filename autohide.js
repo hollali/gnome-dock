@@ -190,90 +190,91 @@ export let AutoHide = class {
     }
   }
 
-  _checkOverlap() {
-    // console.log("checking overlap...");
-    if (this.extension._inOverview) {
-      return false;
-    }
-    let pointer = global.get_pointer();
-    if (this.extension.simulated_pointer) {
-      pointer = [...this.extension.simulated_pointer];
-    }
-
-    // console.log(pointer);
-
-    let pos = this.dock.struts.get_transformed_position();
-    let rect = {
-      x: pos[0],
-      y: pos[1],
-      w: this.dock.struts.width,
-      h: this.dock.struts.height,
-    };
-    //! change to struts rect
-    let arect = [rect.x, rect.y, rect.w, rect.h];
-
-    // console.log(arect);
-
-    if (!this.extension.autohide_dash) {
-      return false;
-    }
-
-    // console.log("checking pointer location...");
-
-    if (this.dock._isWithinDash(pointer) || isInRect(arect, pointer)) {
-      return false;
-    }
-
-    if (!this.extension.autohide_dodge) {
-      return true;
-    }
-
-    // console.log("checking fullscreen...");
-
-    if (this.dock._monitor && this.dock._monitor.inFullscreen) {
-      return true;
-    }
-
-    // console.log("checking windows...");
-
+  _getWindows() {
     let monitor = this.dock._monitor;
-    let actors = global.get_window_actors();
-    let windows = actors.map((a) => {
-      let w = a.get_meta_window();
-      w._parent = a;
-      return w;
-    });
-    windows = windows.filter((w) => w.can_close());
-    windows = windows.filter((w) => w.get_monitor() == monitor.index);
-    // windows = windows.filter((w) => !w.is_override_redirect());
+    if (!monitor) {
+      return [];
+    }
+
+    let windows = global
+      .get_window_actors()
+      .map((actor) => actor.get_meta_window());
+
     let workspace = global.workspace_manager.get_active_workspace_index();
-    windows = windows.filter(
-      (w) =>
-        workspace == w.get_workspace().index() && w.showing_on_its_workspace()
-    );
-    windows = windows.filter((w) => w.get_window_type() in handledWindowTypes);
-
-    let isOverlapped = false;
-    let dockRect = this.dock.struts.get_transformed_position();
-    dockRect.push(this.dock.struts.width);
-    dockRect.push(this.dock.struts.height);
-
-    windows.forEach((w) => {
-      this._track(w);
-      if (isOverlapped) return;
-
-      let frame = w.get_frame_rect();
-      let win = [frame.x, frame.y, frame.width, frame.height];
-
-      if (isOverlapRect(dockRect, win)) {
-        isOverlapped = true;
+    return windows.filter((w) => {
+      try {
+        let ws = w.get_workspace();
+        return (
+          w.can_close() &&
+          w.get_monitor() == monitor.index &&
+          ws && workspace == ws.index() &&
+          w.showing_on_its_workspace() &&
+          handledWindowTypes.includes(w.get_window_type())
+        );
+      } catch (e) {
+        return false;
       }
     });
+  }
 
-    this.windows = windows;
+  _checkOverlap() {
+    try {
+      if (this.extension._inOverview) {
+        return false;
+      }
+      if (!this.extension.autohide_dash) {
+        return false;
+      }
 
-    // console.log(isOverlapped);
-    return isOverlapped;
+      let pointer = global.get_pointer();
+      if (this.extension.simulated_pointer) {
+        pointer = [...this.extension.simulated_pointer];
+      }
+
+      let pos = this.dock.struts.get_transformed_position();
+      let strutsRect = [
+        pos[0],
+        pos[1],
+        this.dock.struts.width,
+        this.dock.struts.height,
+      ];
+
+      if (
+        this.dock._isWithinDash(pointer) ||
+        isInRect(strutsRect, pointer)
+      ) {
+        return false;
+      }
+
+      if (!this.extension.autohide_dodge) {
+        return true;
+      }
+
+      let windows = this._getWindows();
+      windows.forEach((w) => this._track(w));
+      this.windows = windows;
+
+      if (this.extension.autohide_on_app_open && windows.length) {
+        return true;
+      }
+
+      if (this.dock._monitor && this.dock._monitor.inFullscreen) {
+        return true;
+      }
+
+      return windows.some((w) => {
+        let frame = w.get_frame_rect();
+        return isOverlapRect(strutsRect, [
+          frame.x,
+          frame.y,
+          frame.width,
+          frame.height,
+        ]);
+      });
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
   }
 
   _debounceCheckHide() {

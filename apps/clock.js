@@ -215,7 +215,7 @@ const ClockCanvas = GObject.registerClass(
         },
       };
 
-      clock_style = clock_style % 7;
+      clock_style = clock_style % 8;
 
       switch (clock_style) {
         // framed clocks

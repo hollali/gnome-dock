@@ -369,7 +369,6 @@ export let Dock = GObject.registerClass(
       let dash = new Dash();
 
       dash._adjustIconSize = () => {};
-      let con = console;
       let orig = dash._createAppItem;
       orig = orig.bind(dash);
       dash._createAppItem = function (app) {
@@ -1452,21 +1451,15 @@ export let Dock = GObject.registerClass(
 
       let event = Clutter.get_current_event();
       let modifiers = event ? event.get_state() : 0;
-      let pressed = event.type() == Clutter.EventType.BUTTON_PRESS;
-      let button1 = (modifiers & Clutter.ModifierType.BUTTON1_MASK) != 0;
       let button2 = (modifiers & Clutter.ModifierType.BUTTON2_MASK) != 0;
-      let button3 = (modifiers & Clutter.ModifierType.BUTTON3_MASK) != 0;
       let shift = (modifiers & Clutter.ModifierType.SHIFT_MASK) != 0;
-      let isMiddleButton = button3; // middle?
       let isCtrlPressed = (modifiers & Clutter.ModifierType.CONTROL_MASK) != 0;
       let openNewWindow =
         app.can_open_new_window() &&
         app.state == Shell.AppState.RUNNING &&
-        (isCtrlPressed || isMiddleButton);
+        (isCtrlPressed || button2);
       if (openNewWindow) return;
 
-      let workspaceManager = global.workspace_manager;
-      let activeWs = workspaceManager.get_active_workspace();
       let focusedWindow = null;
 
       windows.forEach((w) => {
